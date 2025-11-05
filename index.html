@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clínica Singular - Gestão</title>
     
+    <!-- 
+        NOTA SOBRE AVISOS NO CONSOLE:
+        - Tailwind CDN: Aviso sobre uso em produção - É seguro para desenvolvimento e projetos simples
+        - Source Maps 404: Avisos normais do DevTools para bibliotecas CDN - Não afetam funcionalidade
+        Esses avisos podem ser ignorados com segurança.
+    -->
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -254,6 +261,260 @@
                         <!-- Conteúdo de Usuários -->
                     </div>
 
+                    <!-- Página: Profissionais -->
+                    <div id="profissionais-page" class="page">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Profissionais</h2>
+                            <button id="add-professional-btn"
+                                class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                Novo Profissional
+                            </button>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
+                            <input type="text" id="search-profissionais" placeholder="Buscar profissional..." 
+                                class="mb-4 w-full max-w-sm rounded-md border-gray-300 shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nome</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Especialidades</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email/Telefone</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="profissionais-table-body" class="divide-y divide-gray-200 bg-white">
+                                    <!-- Linhas injetadas via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Página: Especialidades -->
+                    <div id="especialidades-page" class="page">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Especialidades</h2>
+                            <button id="add-especialidade-btn"
+                                class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                Nova Especialidade
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="especialidades-grid">
+                            <!-- Cards injetados via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Página: Agendas Fixas -->
+                    <div id="agendas-fixas-page" class="page">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Agendas Fixas Semanais</h2>
+                            <button id="add-agenda-fixa-btn"
+                                class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                Nova Agenda Fixa
+                            </button>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="mb-4 flex space-x-4">
+                                <select id="filter-professional" class="rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todos os Profissionais</option>
+                                </select>
+                                <select id="filter-day" class="rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todos os Dias</option>
+                                    <option value="1">Segunda-feira</option>
+                                    <option value="2">Terça-feira</option>
+                                    <option value="3">Quarta-feira</option>
+                                    <option value="4">Quinta-feira</option>
+                                    <option value="5">Sexta-feira</option>
+                                    <option value="6">Sábado</option>
+                                    <option value="0">Domingo</option>
+                                </select>
+                            </div>
+                            <div id="agendas-fixas-list">
+                                <!-- Lista injetada via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Página: Atendimentos -->
+                    <div id="atendimentos-page" class="page">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Registro de Atendimentos</h2>
+                            <div class="flex space-x-2">
+                                <input type="date" id="filter-date" class="rounded-md border-gray-300 shadow-sm">
+                                <select id="filter-status" class="rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todos os Status</option>
+                                    <option value="scheduled">Agendado</option>
+                                    <option value="present">Presente</option>
+                                    <option value="absent">Ausente</option>
+                                    <option value="cancelled">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Data/Hora</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Paciente</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Profissional</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Especialidade</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Valores</th>
+                                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="atendimentos-table-body" class="divide-y divide-gray-200 bg-white">
+                                    <!-- Linhas injetadas via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Página: Financeiro -->
+                    <div id="financeiro-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Gestão Financeira</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-sm font-medium text-gray-500">Total a Receber</h3>
+                                <p class="text-3xl font-bold text-green-600" id="total-receber">R$ 0,00</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-sm font-medium text-gray-500">Total de Repasses</h3>
+                                <p class="text-3xl font-bold text-blue-600" id="total-repasses">R$ 0,00</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-sm font-medium text-gray-500">Saldo Líquido</h3>
+                                <p class="text-3xl font-bold text-gray-900" id="saldo-liquido">R$ 0,00</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">Filtros</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                                <input type="date" id="fin-data-inicio" class="rounded-md border-gray-300 shadow-sm">
+                                <input type="date" id="fin-data-fim" class="rounded-md border-gray-300 shadow-sm">
+                                <select id="fin-profissional" class="rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todos Profissionais</option>
+                                </select>
+                                <button id="btn-filtrar-financeiro" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                    Filtrar
+                                </button>
+                            </div>
+                            <div id="financeiro-details">
+                                <!-- Detalhes financeiros injetados via JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Página: Minha Agenda (Therapist) -->
+                    <div id="minha-agenda-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Minha Agenda</h2>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div id="therapist-calendar"></div>
+                        </div>
+                        <div class="mt-6 bg-white p-6 rounded-lg shadow">
+                            <h3 class="text-lg font-semibold mb-4">Resumo do Mês</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total de Atendimentos</p>
+                                    <p class="text-2xl font-bold" id="my-total-appointments">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Presenças</p>
+                                    <p class="text-2xl font-bold text-green-600" id="my-present">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-500">Total de Repasse</p>
+                                    <p class="text-2xl font-bold text-blue-600" id="my-total-value">R$ 0,00</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Página: Auditoria -->
+                    <div id="auditoria-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Registro de Auditoria</h2>
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <input type="date" id="audit-data-inicio" class="rounded-md border-gray-300 shadow-sm">
+                                <input type="date" id="audit-data-fim" class="rounded-md border-gray-300 shadow-sm">
+                                <select id="audit-usuario" class="rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todos Usuários</option>
+                                </select>
+                                <select id="audit-tipo" class="rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todas Ações</option>
+                                    <option value="create">Criação</option>
+                                    <option value="update">Atualização</option>
+                                    <option value="delete">Exclusão</option>
+                                    <option value="status_change">Mudança de Status</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Data/Hora</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Usuário</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Ação</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Entidade</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Detalhes</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditoria-table-body" class="divide-y divide-gray-200 bg-white">
+                                        <!-- Linhas injetadas via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Página: Configurações -->
+                    <div id="configuracoes-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Configurações do Sistema</h2>
+                        <div class="space-y-6">
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-semibold mb-4">Dados da Clínica</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Nome da Clínica</label>
+                                        <input type="text" id="config-clinic-name" class="w-full rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">CNPJ</label>
+                                        <input type="text" id="config-clinic-cnpj" class="w-full rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                                        <input type="text" id="config-clinic-phone" class="w-full rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="config-clinic-email" class="w-full rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-semibold mb-4">Configurações Financeiras</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Percentual Padrão de Repasse (%)</label>
+                                        <input type="number" id="config-default-repass" min="0" max="100" class="w-full md:w-64 rounded-md border-gray-300 shadow-sm">
+                                    </div>
+                                    <div>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="config-auto-reports" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                            <span class="ml-2 text-sm text-gray-700">Gerar relatórios automaticamente</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button id="btn-save-config" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+                                    Salvar Configurações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </main>
         </div>
@@ -380,17 +641,18 @@
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         // !!! IMPORTANTE !!!
-        // Substitua pelo SEU PRÓPRIO objeto de configuração do Firebase
-        // Você pode obtê-lo no Console do Firebase > Configurações do Projeto
+        // Configuração do Firebase - Clínica Singular
+        // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
-            apiKey: "SEU_API_KEY",
-            authDomain: "SEU_AUTH_DOMAIN",
-            // A URL do seu Realtime Database (fornecida no prompt)
-            databaseURL: "https://clinicasingular-folha-default-rtdb.firebaseio.com/",
-            projectId: "SEU_PROJECT_ID",
-            storageBucket: "SEU_STORAGE_BUCKET",
-            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-            appId: "SEU_APP_ID"
+            apiKey: "AIzaSyBwsw9ahi73ylE8KSOqsIzUuiZDsyyYHrg",
+            authDomain: "clinicasingular-folha.firebaseapp.com",
+            databaseURL: "https://clinicasingular-folha-default-rtdb.firebaseio.com",
+            projectId: "clinicasingular-folha",
+            storageBucket: "clinicasingular-folha.firebasestorage.app",
+            messagingSenderId: "556191358983",
+            appId: "1:556191358983:web:dd2992c59d91b91aeecaa2",
+            measurementId: "G-EM9F8SBCRE"
         };
         
         // Inicializa Firebase
@@ -409,6 +671,64 @@
                 <p class="mt-2 text-sm text-gray-500">${error.message}</p>
             </div>`;
         }
+
+        /* ========================================================================
+           INSTRUÇÕES PARA CRIAR USUÁRIOS NO FIREBASE
+           ========================================================================
+           
+           Para criar os 3 usuários de teste no Firebase, siga os passos:
+           
+           1. Acesse o Firebase Console: https://console.firebase.google.com/
+           2. Selecione o projeto "clinicasingular-folha"
+           3. No menu lateral, vá em "Authentication" > "Users"
+           4. Clique em "Add user" e crie os seguintes usuários:
+           
+           USUÁRIO 1 - ADMINISTRADOR:
+           - Email: admin@clinicasingular.com
+           - Senha: Admin@123
+           
+           USUÁRIO 2 - PSICÓLOGO:
+           - Email: psicologo@clinicasingular.com
+           - Senha: Psi@123
+           
+           USUÁRIO 3 - SECRETÁRIO:
+           - Email: secretario@clinicasingular.com
+           - Senha: Sec@123
+           
+           5. Após criar os usuários na aba Authentication, vá em "Realtime Database"
+           6. Na estrutura do banco, adicione os perfis dos usuários em "users/":
+           
+           users/
+             {uid-do-admin}/
+               email: "admin@clinicasingular.com"
+               name: "Admin"
+               role: "administrator"
+               status: "active"
+               createdAt: {timestamp atual}
+             
+             {uid-do-psicologo}/
+               email: "psicologo@clinicasingular.com"
+               name: "Psicólogo"
+               role: "therapist"
+               status: "active"
+               createdAt: {timestamp atual}
+             
+             {uid-do-secretario}/
+               email: "secretario@clinicasingular.com"
+               name: "Secretário"
+               role: "reception"
+               status: "active"
+               createdAt: {timestamp atual}
+           
+           NOTA: Substitua {uid-do-admin}, {uid-do-psicologo}, {uid-do-secretario} 
+           pelos UIDs reais que o Firebase gerou ao criar cada usuário.
+           
+           ROLES DISPONÍVEIS:
+           - administrator: Acesso total ao sistema
+           - therapist: Acesso a agenda e pacientes (visualização)
+           - reception: Acesso a agenda, pacientes e financeiro
+           
+        ======================================================================== */
 
         // --- VIRTUAL FILE: offlineSync.js ---
         // (usando 'idb' importado globalmente)
@@ -431,6 +751,25 @@
                 });
             }
             return offlineDbPromise;
+        }
+        
+        /**
+         * Reseta o banco de dados offline em caso de erro crítico.
+         * ATENÇÃO: Esta função apaga todos os dados offline não sincronizados!
+         */
+        async function resetOfflineDb() {
+            try {
+                const dbs = await indexedDB.databases();
+                const dbExists = dbs.find(db => db.name === DB_NAME);
+                if (dbExists) {
+                    indexedDB.deleteDatabase(DB_NAME);
+                    console.log('Banco de dados offline resetado.');
+                }
+                offlineDbPromise = null;
+                await initOfflineDb();
+            } catch (error) {
+                console.error('Erro ao resetar banco offline:', error);
+            }
         }
         
         /**
@@ -480,16 +819,16 @@
                 const db = await initOfflineDb();
                 const tx = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
                 const store = tx.store;
-                let item = await store.index('id').openCursor(); // Pega o mais antigo
+                let cursor = await store.openCursor(); // Pega o cursor sem usar índice
 
-                if (!item) {
+                if (!cursor) {
                     console.log("Fila de sincronização vazia.");
                     updateSyncStatus('synced', 'Sincronizado');
                     return;
                 }
 
-                while (item) {
-                    const { id, action, payload } = item.value;
+                while (cursor) {
+                    const { id, action, payload } = cursor.value;
                     console.log(`Processando item ${id}: ${action}`);
 
                     try {
@@ -518,7 +857,7 @@
                         await store.delete(id);
                         console.log(`Item ${id} sincronizado e removido.`);
                         
-                        item = await item.continue();
+                        cursor = await cursor.continue();
 
                     } catch (error) {
                         console.error(`Erro ao sincronizar item ${id} (${action}):`, error);
@@ -537,6 +876,11 @@
             } catch (error) {
                 console.error("Erro grave no processamento da fila de sincronização:", error);
                 updateSyncStatus('error', 'Erro na fila');
+                
+                // Se for um erro de estrutura do IndexedDB, sugerir reset
+                if (error.name === 'NotFoundError' || error.code === 8) {
+                    console.warn('Erro de estrutura do IndexedDB detectado. Execute resetOfflineDb() no console para corrigir.');
+                }
             }
         }
         
@@ -901,7 +1245,7 @@
         let chartInstances = {}; // Instâncias do Chart.js
         let dataListeners = []; // Armazena referências para 'off()' do Firebase
 
-        // Definição das rotas e permissões
+        // Definição das rotas e permissões (atualizado para novo sistema)
         const routes = {
             '#/dashboard': { 
                 title: 'Dashboard', 
@@ -915,29 +1259,71 @@
                 roles: ['administrator', 'reception', 'therapist'],
                 load: loadAgendaPage
             },
+            '#/agendas-fixas': { 
+                title: 'Agendas Fixas', 
+                icon: 'calendar-check', 
+                roles: ['administrator', 'reception'],
+                load: loadAgendasFixasPage
+            },
+            '#/profissionais': { 
+                title: 'Profissionais', 
+                icon: 'user-check', 
+                roles: ['administrator', 'reception'],
+                load: loadProfissionaisPage
+            },
+            '#/especialidades': { 
+                title: 'Especialidades', 
+                icon: 'clipboard-list', 
+                roles: ['administrator'],
+                load: loadEspecialidadesPage
+            },
             '#/pacientes': { 
                 title: 'Pacientes', 
                 icon: 'users', 
-                roles: ['administrator', 'reception', 'therapist'], // Terapeutas podem ver, mas não editar
+                roles: ['administrator', 'reception'],
                 load: loadPacientesPage
             },
-            '#/pagamentos': { 
+            '#/atendimentos': { 
+                title: 'Atendimentos', 
+                icon: 'clipboard-check', 
+                roles: ['administrator', 'reception'],
+                load: loadAtendimentosPage
+            },
+            '#/financeiro': { 
                 title: 'Financeiro', 
                 icon: 'dollar-sign', 
                 roles: ['administrator', 'reception'],
-                load: loadPagamentosPage
+                load: loadFinanceiroPage
             },
             '#/relatorios': { 
                 title: 'Relatórios', 
-                icon: 'pie-chart', 
-                roles: ['administrator'],
+                icon: 'file-text', 
+                roles: ['administrator', 'reception'],
                 load: loadRelatoriosPage
+            },
+            '#/minha-agenda': { 
+                title: 'Minha Agenda', 
+                icon: 'calendar', 
+                roles: ['therapist'],
+                load: loadMinhaAgendaPage
+            },
+            '#/auditoria': { 
+                title: 'Auditoria', 
+                icon: 'shield-check', 
+                roles: ['administrator'],
+                load: loadAuditoriaPage
             },
             '#/usuarios': { 
                 title: 'Usuários', 
                 icon: 'user-cog', 
                 roles: ['administrator'],
                 load: loadUsuariosPage
+            },
+            '#/configuracoes': { 
+                title: 'Configurações', 
+                icon: 'settings', 
+                roles: ['administrator'],
+                load: loadConfiguracoesPage
             }
         };
         
@@ -1837,6 +2223,480 @@
                 </div>
             `;
             lucide.createIcons({ nodes: $('#usuarios-page svg')});
+        }
+
+        // --- VIRTUAL FILE: profissionais.js ---
+        async function loadProfissionaisPage() {
+            console.log("Carregando Profissionais...");
+            
+            // Buscar profissionais do Firebase
+            try {
+                const profissionaisRef = ref(db, 'professionals');
+                const snapshot = await get(profissionaisRef);
+                
+                let professionalsList = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    professionalsList = Object.keys(data).map(id => ({
+                        id,
+                        ...data[id]
+                    })).filter(p => p.active !== false);
+                }
+                
+                renderProfissionaisList(professionalsList);
+            } catch (error) {
+                console.error("Erro ao carregar profissionais:", error);
+                showAlert('Erro', 'Não foi possível carregar os profissionais.', 'error');
+            }
+        }
+
+        function renderProfissionaisList(professionals) {
+            const tbody = $('#profissionais-table-body');
+            if (!professionals || professionals.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="user-x"></svg>
+                            <p class="mt-2">Nenhum profissional cadastrado</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons({ nodes: tbody });
+                return;
+            }
+
+            tbody.innerHTML = professionals.map(prof => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${prof.name}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-500">
+                            ${prof.specialties ? Object.keys(prof.specialties).length + ' especialidade(s)' : 'Nenhuma'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">${prof.email || '-'}</div>
+                        <div class="text-sm text-gray-500">${prof.phone || '-'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Ativo
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="editProfessional('${prof.id}')" class="text-blue-600 hover:text-blue-900 mr-3">Editar</button>
+                        <button onclick="viewProfessionalSchedule('${prof.id}')" class="text-gray-600 hover:text-gray-900">Agenda</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- VIRTUAL FILE: especialidades.js ---
+        async function loadEspecialidadesPage() {
+            console.log("Carregando Especialidades...");
+            
+            try {
+                const especialidadesRef = ref(db, 'specialties');
+                const snapshot = await get(especialidadesRef);
+                
+                let specialtiesList = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    specialtiesList = Object.keys(data).map(id => ({
+                        id,
+                        ...data[id]
+                    })).filter(s => s.active !== false);
+                }
+                
+                renderEspecialidadesList(specialtiesList);
+            } catch (error) {
+                console.error("Erro ao carregar especialidades:", error);
+                showAlert('Erro', 'Não foi possível carregar as especialidades.', 'error');
+            }
+        }
+
+        function renderEspecialidadesList(specialties) {
+            const grid = $('#especialidades-grid');
+            if (!specialties || specialties.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center text-gray-500 py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="clipboard-x"></svg>
+                        <p class="mt-2">Nenhuma especialidade cadastrada</p>
+                    </div>
+                `;
+                lucide.createIcons({ nodes: grid });
+                return;
+            }
+
+            grid.innerHTML = specialties.map(spec => `
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-semibold text-gray-900">${spec.name}</h3>
+                        <button onclick="editEspecialidade('${spec.id}')" class="text-blue-600 hover:text-blue-900">
+                            <svg class="h-5 w-5" data-lucide="edit"></svg>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">${spec.description || 'Sem descrição'}</p>
+                    <div class="border-t pt-3">
+                        <p class="text-sm text-gray-500">Valor Padrão</p>
+                        <p class="text-2xl font-bold text-blue-600">R$ ${(spec.defaultValue || 0).toFixed(2)}</p>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons({ nodes: grid });
+        }
+
+        // --- VIRTUAL FILE: agendas-fixas.js ---
+        async function loadAgendasFixasPage() {
+            console.log("Carregando Agendas Fixas...");
+            
+            try {
+                const agendasRef = ref(db, 'fixedSchedules');
+                const snapshot = await get(agendasRef);
+                
+                let schedulesList = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    schedulesList = Object.keys(data).map(id => ({
+                        id,
+                        ...data[id]
+                    })).filter(s => s.active !== false);
+                }
+                
+                renderAgendasFixasList(schedulesList);
+            } catch (error) {
+                console.error("Erro ao carregar agendas fixas:", error);
+                showAlert('Erro', 'Não foi possível carregar as agendas fixas.', 'error');
+            }
+        }
+
+        function renderAgendasFixasList(schedules) {
+            const container = $('#agendas-fixas-list');
+            if (!schedules || schedules.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="calendar-x"></svg>
+                        <p class="mt-2">Nenhuma agenda fixa cadastrada</p>
+                    </div>
+                `;
+                lucide.createIcons({ nodes: container });
+                return;
+            }
+
+            const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+            container.innerHTML = `
+                <div class="space-y-2">
+                    ${schedules.map(sch => `
+                        <div class="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                                            ${days[sch.dayOfWeek]}
+                                        </span>
+                                        <span class="text-lg font-semibold">${sch.startTime} - ${sch.endTime}</span>
+                                    </div>
+                                    <div class="mt-2 text-sm text-gray-600">
+                                        <p>Paciente: <span class="font-medium">${sch.patientName || 'Carregando...'}</span></p>
+                                        <p>Profissional: <span class="font-medium">${sch.professionalName || 'Carregando...'}</span></p>
+                                        <p>Especialidade: <span class="font-medium">${sch.specialtyName || 'Carregando...'}</span></p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="editAgendaFixa('${sch.id}')" class="text-blue-600 hover:text-blue-900">
+                                        <svg class="h-5 w-5" data-lucide="edit"></svg>
+                                    </button>
+                                    <button onclick="deleteAgendaFixa('${sch.id}')" class="text-red-600 hover:text-red-900">
+                                        <svg class="h-5 w-5" data-lucide="trash-2"></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            lucide.createIcons({ nodes: container });
+        }
+
+        // --- VIRTUAL FILE: atendimentos.js ---
+        async function loadAtendimentosPage() {
+            console.log("Carregando Atendimentos...");
+            
+            try {
+                const appointmentsRef = ref(db, 'appointments');
+                const snapshot = await get(appointmentsRef);
+                
+                let appointmentsList = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    appointmentsList = Object.keys(data).map(id => ({
+                        id,
+                        ...data[id]
+                    })).sort((a, b) => new Date(b.date) - new Date(a.date));
+                }
+                
+                renderAtendimentosList(appointmentsList);
+            } catch (error) {
+                console.error("Erro ao carregar atendimentos:", error);
+                showAlert('Erro', 'Não foi possível carregar os atendimentos.', 'error');
+            }
+        }
+
+        function renderAtendimentosList(appointments) {
+            const tbody = $('#atendimentos-table-body');
+            if (!appointments || appointments.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="calendar-x"></svg>
+                            <p class="mt-2">Nenhum atendimento encontrado</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons({ nodes: tbody });
+                return;
+            }
+
+            const statusColors = {
+                scheduled: 'bg-gray-100 text-gray-800',
+                present: 'bg-green-100 text-green-800',
+                absent: 'bg-red-100 text-red-800',
+                cancelled: 'bg-yellow-100 text-yellow-800'
+            };
+
+            const statusLabels = {
+                scheduled: 'Agendado',
+                present: 'Presente',
+                absent: 'Ausente',
+                cancelled: 'Cancelado'
+            };
+
+            tbody.innerHTML = appointments.map(app => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${app.date}</div>
+                        <div class="text-sm text-gray-500">${app.startTime} - ${app.endTime}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">${app.patientName || 'Carregando...'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-900">${app.professionalName || 'Carregando...'}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm text-gray-500">${app.specialtyName || 'Carregando...'}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[app.status] || statusColors.scheduled}">
+                            ${statusLabels[app.status] || app.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        ${app.financial ? `
+                            <div class="text-sm">
+                                <div>Pac: R$ ${(app.financial.patientValue || 0).toFixed(2)}</div>
+                                <div class="text-gray-500">Rep: R$ ${(app.financial.professionalValue || 0).toFixed(2)}</div>
+                            </div>
+                        ` : '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        ${app.status === 'scheduled' ? `
+                            <button onclick="updateStatus('${app.id}', 'present')" class="text-green-600 hover:text-green-900 mr-2">Presente</button>
+                            <button onclick="updateStatus('${app.id}', 'absent')" class="text-red-600 hover:text-red-900 mr-2">Ausente</button>
+                            <button onclick="updateStatus('${app.id}', 'cancelled')" class="text-yellow-600 hover:text-yellow-900">Cancelar</button>
+                        ` : `
+                            <button onclick="viewAppointmentDetails('${app.id}')" class="text-blue-600 hover:text-blue-900">Detalhes</button>
+                        `}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- VIRTUAL FILE: financeiro.js ---
+        async function loadFinanceiroPage() {
+            console.log("Carregando Financeiro...");
+            
+            try {
+                const appointmentsRef = ref(db, 'appointments');
+                const snapshot = await get(appointmentsRef);
+                
+                let totalReceber = 0;
+                let totalRepasses = 0;
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    Object.values(data).forEach(app => {
+                        if (app.financial && (app.status === 'present' || app.status === 'absent')) {
+                            totalReceber += app.financial.patientValue || 0;
+                            totalRepasses += app.financial.professionalValue || 0;
+                        }
+                    });
+                }
+                
+                $('#total-receber').textContent = `R$ ${totalReceber.toFixed(2)}`;
+                $('#total-repasses').textContent = `R$ ${totalRepasses.toFixed(2)}`;
+                $('#saldo-liquido').textContent = `R$ ${(totalReceber - totalRepasses).toFixed(2)}`;
+                
+            } catch (error) {
+                console.error("Erro ao carregar financeiro:", error);
+                showAlert('Erro', 'Não foi possível carregar dados financeiros.', 'error');
+            }
+        }
+
+        // --- VIRTUAL FILE: minha-agenda.js ---
+        async function loadMinhaAgendaPage() {
+            console.log("Carregando Minha Agenda (Therapist)...");
+            
+            if (!currentUserProfile.professionalId) {
+                showAlert('Erro', 'Perfil de profissional não encontrado.', 'error');
+                return;
+            }
+            
+            try {
+                const appointmentsRef = ref(db, 'appointments');
+                const q = query(appointmentsRef, orderByChild('professionalId'), equalTo(currentUserProfile.professionalId));
+                const snapshot = await get(q);
+                
+                let myAppointments = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    myAppointments = Object.keys(data).map(id => ({
+                        id,
+                        ...data[id]
+                    }));
+                }
+                
+                // Renderizar calendário e resumo
+                renderTherapistCalendar(myAppointments);
+                updateTherapistSummary(myAppointments);
+                
+            } catch (error) {
+                console.error("Erro ao carregar minha agenda:", error);
+                showAlert('Erro', 'Não foi possível carregar sua agenda.', 'error');
+            }
+        }
+
+        function renderTherapistCalendar(appointments) {
+            // TODO: Implementar FullCalendar para therapist (apenas visualização)
+            $('#therapist-calendar').innerHTML = `
+                <div class="text-center text-gray-500 py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="calendar"></svg>
+                    <p class="mt-2">Calendário em desenvolvimento</p>
+                </div>
+            `;
+            lucide.createIcons({ nodes: $('#therapist-calendar') });
+        }
+
+        function updateTherapistSummary(appointments) {
+            const thisMonth = appointments.filter(app => {
+                const appDate = new Date(app.date);
+                const now = new Date();
+                return appDate.getMonth() === now.getMonth() && appDate.getFullYear() === now.getFullYear();
+            });
+            
+            const present = thisMonth.filter(app => app.status === 'present').length;
+            const total = thisMonth.length;
+            const totalValue = thisMonth
+                .filter(app => app.status === 'present' && app.financial)
+                .reduce((sum, app) => sum + (app.financial.professionalValue || 0), 0);
+            
+            $('#my-total-appointments').textContent = total;
+            $('#my-present').textContent = present;
+            $('#my-total-value').textContent = `R$ ${totalValue.toFixed(2)}`;
+        }
+
+        // --- VIRTUAL FILE: auditoria.js ---
+        async function loadAuditoriaPage() {
+            console.log("Carregando Auditoria...");
+            
+            try {
+                const auditRef = ref(db, 'auditLog');
+                const snapshot = await get(auditRef);
+                
+                let auditLogs = [];
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    auditLogs = Object.keys(data).map(id => ({
+                        id,
+                        ...data[id]
+                    })).sort((a, b) => b.timestamp - a.timestamp).slice(0, 100); // Últimos 100
+                }
+                
+                renderAuditLogs(auditLogs);
+            } catch (error) {
+                console.error("Erro ao carregar auditoria:", error);
+                showAlert('Erro', 'Não foi possível carregar o registro de auditoria.', 'error');
+            }
+        }
+
+        function renderAuditLogs(logs) {
+            const tbody = $('#auditoria-table-body');
+            if (!logs || logs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="shield-off"></svg>
+                            <p class="mt-2">Nenhum registro de auditoria encontrado</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons({ nodes: tbody });
+                return;
+            }
+
+            tbody.innerHTML = logs.map(log => `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">${new Date(log.timestamp).toLocaleString('pt-BR')}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">${log.userName}</div>
+                        <div class="text-sm text-gray-500">${log.userRole}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                            ${log.action}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${log.entityType}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        ${log.changes ? log.changes.map(c => `${c.field}: ${c.oldValue} → ${c.newValue}`).join('<br>') : '-'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // --- VIRTUAL FILE: configuracoes.js ---
+        async function loadConfiguracoesPage() {
+            console.log("Carregando Configurações...");
+            
+            try {
+                const configRef = ref(db, 'systemSettings');
+                const snapshot = await get(configRef);
+                
+                if (snapshot.exists()) {
+                    const config = snapshot.val();
+                    
+                    // Preencher campos
+                    if (config.clinic) {
+                        $('#config-clinic-name').value = config.clinic.name || '';
+                        $('#config-clinic-cnpj').value = config.clinic.cnpj || '';
+                        $('#config-clinic-phone').value = config.clinic.phone || '';
+                        $('#config-clinic-email').value = config.clinic.email || '';
+                    }
+                    
+                    if (config.financial) {
+                        $('#config-default-repass').value = config.financial.defaultRepassPercentage || 70;
+                        $('#config-auto-reports').checked = config.financial.autoGenerateReports || false;
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao carregar configurações:", error);
+                showAlert('Erro', 'Não foi possível carregar as configurações.', 'error');
+            }
         }
 
 
