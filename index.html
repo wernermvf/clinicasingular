@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Singular - Gestão</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FullCalendar (Agenda) -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+    <!-- Chart.js (Dashboard) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- jsPDF (Relatórios) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.autotable.js"></script>
+    
+    <!-- idb (Offline Sync - IndexedDB) -->
+    <script src="https://cdn.jsdelivr.net/npm/idb@7/build/umd.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Estilos base */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Oculta páginas/views por padrão */
+        .page {
+            display: none;
+        }
+        
+        /* Classe para mostrar a view ativa */
+        .page.active {
+            display: block;
+        }
+
+        /* Classes de utilidade para sync status */
+        .sync-synced { color: #22c55e; } /* green-500 */
+        .sync-syncing { color: #f59e0b; } /* amber-500 */
+        .sync-offline { color: #8b5cf6; } /* violet-500 */
+        .sync-error { color: #ef4444; } /* red-500 */
+
+        /* Ajustes do FullCalendar com Tailwind */
+        :root {
+            --fc-border-color: theme('colors.gray.200');
+            --fc-daygrid-event-dot-width: 8px;
+            --fc-list-event-dot-width: 8px;
+            --fc-event-bg-color: theme('colors.blue.600');
+            --fc-event-border-color: theme('colors.blue.600');
+            --fc-event-text-color: theme('colors.white');
+            --fc-today-bg-color: theme('colors.blue.50');
+            --fc-button-bg-color: theme('colors.blue.600');
+            --fc-button-text-color: theme('colors.white');
+            --fc-button-border-color: theme('colors.blue.600');
+            --fc-button-hover-bg-color: theme('colors.blue.700');
+            --fc-button-hover-border-color: theme('colors.blue.700');
+            --fc-button-active-bg-color: theme('colors.blue.800');
+            --fc-button-active-border-color: theme('colors.blue.800');
+        }
+
+        .fc {
+            font-size: 0.875rem; /* text-sm */
+        }
+    </style>
+</head>
+<body class="h-full">
+
+    <!-- 1. Tela de Login (View) -->
+    <div id="login-view" class="flex items-center justify-center min-h-full bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md space-y-8">
+            <div>
+                <svg class="mx-auto h-12 w-auto text-blue-600" data-lucide="brain"></svg>
+                <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+                    Clínica Singular
+                </h2>
+                <p class="mt-2 text-center text-sm text-gray-600">
+                    Acesse seu painel de gestão
+                </p>
+            </div>
+            <form id="login-form" class="mt-8 space-y-6">
+                <div class="rounded-md shadow-sm -space-y-px">
+                    <div>
+                        <label for="email-address" class="sr-only">Email</label>
+                        <input id="login-email" name="email" type="email" autocomplete="email" required
+                            class="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                            placeholder="Endereço de email">
+                    </div>
+                    <div>
+                        <label for="password" class="sr-only">Senha</label>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password"
+                            required
+                            class="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                            placeholder="Senha">
+                    </div>
+                </div>
+                <div>
+                    <button type="submit"
+                        class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <svg class="h-5 w-5 text-blue-500 group-hover:text-blue-400" data-lucide="lock"
+                                aria-hidden="true"></svg>
+                        </span>
+                        Entrar
+                    </button>
+                </div>
+                <p id="login-error" class="mt-2 text-center text-sm text-red-600"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Aplicação Principal (View) -->
+    <div id="app-view" class="hidden h-full">
+        <!-- Sidebar (Desktop) -->
+        <div id="sidebar"
+            class="fixed inset-y-0 z-50 hidden w-64 flex-col bg-white shadow-lg md:flex">
+            <div class="flex flex-shrink-0 items-center px-6 h-16 border-b border-gray-200">
+                <svg class="h-8 w-auto text-blue-600" data-lucide="brain"></svg>
+                <span class="ml-3 text-xl font-bold text-gray-800">Clínica Singular</span>
+            </div>
+            <div class="flex flex-1 flex-col overflow-y-auto">
+                <nav id="app-nav" class="flex-1 space-y-1 px-4 py-4"></nav>
+            </div>
+            <div class="border-t border-gray-200 p-4">
+                <div class="flex items-center">
+                    <div>
+                        <div id="user-name" class="text-sm font-medium text-gray-800"></div>
+                        <div id="user-role" class="text-xs text-gray-500"></div>
+                    </div>
+                </div>
+                <button id="logout-button"
+                    class="mt-4 w-full flex items-center justify-center rounded-md border border-transparent bg-gray-100 py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-200">
+                    <svg class="mr-2 h-4 w-4" data-lucide="log-out"></svg>
+                    Sair
+                </button>
+            </div>
+        </div>
+
+        <!-- Conteúdo Principal -->
+        <div class="flex flex-1 flex-col md:pl-64">
+            <!-- Header (Mobile + Info) -->
+            <header class="sticky top-0 z-40 flex h-16 flex-shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-8">
+                <!-- Botão Menu Mobile -->
+                <button type="button" id="mobile-menu-button"
+                    class="rounded-md p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden">
+                    <span class="sr-only">Abrir menu</span>
+                    <svg class="h-6 w-6" data-lucide="menu"></svg>
+                </button>
+                
+                <!-- Placeholder para manter o título centralizado -->
+                <div class="md:hidden"></div>
+
+                <!-- Título da Página Atual -->
+                <h1 id="page-title" class="text-lg font-semibold text-gray-800"></h1>
+
+                <!-- Status da Sincronização -->
+                <div id="sync-status" class="flex items-center space-x-2 text-sm">
+                    <svg id="sync-icon" class="h-5 w-5" data-lucide="wifi"></svg>
+                    <span id="sync-text" class="hidden sm:inline"></span>
+                </div>
+            </header>
+
+            <!-- Conteúdo da Página -->
+            <main class="flex-1">
+                <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+                    <!-- Página: Dashboard -->
+                    <div id="dashboard-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Dashboard</h2>
+                        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            <!-- Card 1 -->
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-medium">Atendimentos no Mês</h3>
+                                <canvas id="chart-atendimentos" class="mt-4"></canvas>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-medium">Distribuição por Especialidade</h3>
+                                <canvas id="chart-especialidades" class="mt-4"></canvas>
+                            </div>
+                            <!-- Card 3 -->
+                            <div class="bg-white p-6 rounded-lg shadow">
+                                <h3 class="text-lg font-medium">Taxa de Cancelamento</h3>
+                                <canvas id="chart-cancelamentos" class="mt-4"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Página: Agenda -->
+                    <div id="agenda-page" class="page">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Agenda</h2>
+                            <button id="add-appointment-btn"
+                                class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                Novo Atendimento
+                            </button>
+                        </div>
+                        <div id="calendar" class="bg-white p-6 rounded-lg shadow"></div>
+                    </div>
+
+                    <!-- Página: Pacientes -->
+                    <div id="pacientes-page" class="page">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">Pacientes</h2>
+                            <button id="add-patient-btn"
+                                class="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
+                                Novo Paciente
+                            </button>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
+                            <input type="text" id="search-pacientes" placeholder="Buscar paciente..." class="mb-4 w-full max-w-sm rounded-md border-gray-300 shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nome</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Responsável</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Telefone</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                                        <th scope="col" class="relative px-6 py-3"><span class="sr-only">Editar</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pacientes-table-body" class="divide-y divide-gray-200 bg-white">
+                                    <!-- Linhas injetadas via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Página: Pagamentos -->
+                    <div id="pagamentos-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Gestão Financeira</h2>
+                        <!-- Conteúdo de Pagamentos -->
+                    </div>
+
+                    <!-- Página: Relatórios -->
+                    <div id="relatorios-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Relatórios</h2>
+                        <!-- Conteúdo de Relatórios -->
+                    </div>
+
+                    <!-- Página: Usuários (Admin) -->
+                    <div id="usuarios-page" class="page">
+                        <h2 class="text-2xl font-bold mb-6">Gestão de Usuários</h2>
+                        <!-- Conteúdo de Usuários -->
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+        <!-- Menu Mobile (Overlay) -->
+        <div id="mobile-menu" class="relative z-50 md:hidden" style="display: none;">
+            <!-- Overlay -->
+            <div id="mobile-menu-overlay" class="fixed inset-0 bg-gray-600 bg-opacity-75"></div>
+            <!-- Painel -->
+            <div class="fixed inset-0 flex">
+                <div class="relative flex w-full max-w-xs flex-1 flex-col bg-white">
+                    <!-- Botão Fechar -->
+                    <div class="absolute top-0 right-0 -mr-12 pt-2">
+                        <button type="button" id="mobile-menu-close"
+                            class="ml-1 flex h-10 w-10 items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                            <span class="sr-only">Fechar menu</span>
+                            <svg class="h-6 w-6 text-white" data-lucide="x"></svg>
+                        </button>
+                    </div>
+                    <!-- Logo -->
+                    <div class="flex flex-shrink-0 items-center px-6 h-16 border-b border-gray-200">
+                        <svg class="h-8 w-auto text-blue-600" data-lucide="brain"></svg>
+                        <span class="ml-3 text-xl font-bold text-gray-800">Clínica Singular</span>
+                    </div>
+                    <!-- Navegação -->
+                    <div class="flex-1 overflow-y-auto">
+                        <nav id="mobile-app-nav" class="space-y-1 px-4 py-4"></nav>
+                    </div>
+                    <!-- Usuário e Logout -->
+                    <div class="border-t border-gray-200 p-4">
+                        <div class="flex items-center">
+                            <div>
+                                <div id="mobile-user-name" class="text-sm font-medium text-gray-800"></div>
+                                <div id="mobile-user-role" class="text-xs text-gray-500"></div>
+                            </div>
+                        </div>
+                        <button id="mobile-logout-button"
+                            class="mt-4 w-full flex items-center justify-center rounded-md border border-transparent bg-gray-100 py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-200">
+                            <svg class="mr-2 h-4 w-4" data-lucide="log-out"></svg>
+                            Sair
+                        </button>
+                    </div>
+                </div>
+                <div class="w-14 flex-shrink-0"></div> <!-- Dummy element to force sidebar to shrink -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Genérico -->
+    <div id="modal-container" class="relative z-[100]" style="display: none;">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div id="modal-icon" class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <!-- Ícone via JS -->
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-lg font-semibold leading-6 text-gray-900" id="modal-title"></h3>
+                                <div class="mt-2 w-full">
+                                    <div id="modal-content" class="text-sm text-gray-500">
+                                        <!-- Conteúdo do Form/Modal via JS -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                        <button type="button" id="modal-primary-btn"
+                            class="inline-flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:ml-3 sm:w-auto">
+                            Salvar
+                        </button>
+                        <button type="button" id="modal-secondary-btn"
+                            class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay Global -->
+    <div id="global-loader" class="fixed inset-0 z-[200] flex items-center justify-center bg-white bg-opacity-75" style="display: none;">
+        <div class="flex flex-col items-center">
+            <svg class="h-12 w-12 animate-spin text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="mt-4 text-lg font-medium text-gray-700">Carregando...</span>
+        </div>
+    </div>
+
+
+    <!-- ====================================================================== -->
+    <!-- JAVASCRIPT APLICACAO                                                     -->
+    <!-- ====================================================================== -->
+    <script type="module">
+    
+        // --- VIRTUAL FILE: firebaseConfig.js ---
+        // SDKs do Firebase (Modular v9+)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithEmailAndPassword, 
+            signOut
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set, 
+            get, 
+            onValue, 
+            push, 
+            update, 
+            query, 
+            orderByChild, 
+            equalTo, 
+            serverTimestamp,
+            off
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // !!! IMPORTANTE !!!
+        // Substitua pelo SEU PRÓPRIO objeto de configuração do Firebase
+        // Você pode obtê-lo no Console do Firebase > Configurações do Projeto
+        const firebaseConfig = {
+            apiKey: "SEU_API_KEY",
+            authDomain: "SEU_AUTH_DOMAIN",
+            // A URL do seu Realtime Database (fornecida no prompt)
+            databaseURL: "https://clinicasingular-folha-default-rtdb.firebaseio.com/",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_STORAGE_BUCKET",
+            messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+            appId: "SEU_APP_ID"
+        };
+        
+        // Inicializa Firebase
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getDatabase(app);
+            console.log("Firebase inicializado com sucesso.");
+        } catch (error) {
+            console.error("Erro ao inicializar o Firebase:", error);
+            document.body.innerHTML = `<div class="p-8 text-center text-red-600">
+                <h1 class="text-2xl font-bold">Erro na Configuração</h1>
+                <p class="mt-4">Não foi possível inicializar o Firebase. Verifique se o objeto 'firebaseConfig' no 
+                início do script <pre>index.html</pre> está correto. Copie e cole a configuração do seu projeto Firebase.</p>
+                <p class="mt-2 text-sm text-gray-500">${error.message}</p>
+            </div>`;
+        }
+
+        // --- VIRTUAL FILE: offlineSync.js ---
+        // (usando 'idb' importado globalmente)
+        const { openDB } = idb;
+        const DB_NAME = 'clinic-singular-db';
+        const DB_VERSION = 1;
+        const SYNC_QUEUE_STORE = 'syncQueue';
+        
+        let offlineDbPromise;
+
+        function initOfflineDb() {
+            if (!offlineDbPromise) {
+                offlineDbPromise = openDB(DB_NAME, DB_VERSION, {
+                    upgrade(db) {
+                        if (!db.objectStoreNames.contains(SYNC_QUEUE_STORE)) {
+                            db.createObjectStore(SYNC_QUEUE_STORE, { keyPath: 'id', autoIncrement: true });
+                        }
+                        // Outras stores para cache (ex: pacientes) podem ser criadas aqui
+                    },
+                });
+            }
+            return offlineDbPromise;
+        }
+        
+        /**
+         * Adiciona uma ação à fila de sincronização offline.
+         * @param {string} action - Tipo da ação (ex: 'CREATE_PATIENT', 'UPDATE_ATTENDANCE')
+         * @param {object} payload - Dados necessários para executar a ação
+         */
+        async function addToSyncQueue(action, payload) {
+            try {
+                const db = await initOfflineDb();
+                const tx = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+                await tx.store.add({
+                    action,
+                    payload,
+                    timestamp: new Date().toISOString()
+                });
+                await tx.done;
+                console.log(`Ação ${action} adicionada à fila offline.`);
+                updateSyncStatus('offline', 'Fila pendente');
+                // Tenta sincronizar imediatamente se estiver online
+                if (navigator.onLine) {
+                    processSyncQueue();
+                }
+            } catch (error) {
+                console.error("Erro ao adicionar à fila de sincronização:", error);
+            }
+        }
+
+        /**
+         * Processa a fila de sincronização pendente.
+         */
+        async function processSyncQueue() {
+            if (!navigator.onLine) {
+                console.log("Offline. Sincronização pausada.");
+                updateSyncStatus('offline', 'Offline');
+                return;
+            }
+
+            if (syncStatus === 'syncing') {
+                console.log("Sincronização já em progresso.");
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Sincronizando...');
+
+            try {
+                const db = await initOfflineDb();
+                const tx = db.transaction(SYNC_QUEUE_STORE, 'readwrite');
+                const store = tx.store;
+                let item = await store.index('id').openCursor(); // Pega o mais antigo
+
+                if (!item) {
+                    console.log("Fila de sincronização vazia.");
+                    updateSyncStatus('synced', 'Sincronizado');
+                    return;
+                }
+
+                while (item) {
+                    const { id, action, payload } = item.value;
+                    console.log(`Processando item ${id}: ${action}`);
+
+                    try {
+                        // Lógica de execução da ação
+                        // Esta é a parte complexa que precisa mapear 'action' para uma função do Firebase
+                        switch (action) {
+                            case 'CREATE_PATIENT':
+                                // Exemplo:
+                                // const newPatientRef = push(ref(db, 'patients'));
+                                // await set(newPatientRef, payload);
+                                console.log('Sincronizando CREATE_PATIENT (simulado)', payload);
+                                break;
+                            case 'UPDATE_ATTENDANCE':
+                                // Exemplo:
+                                // const { appointmentId, data } = payload;
+                                // const apptRef = ref(db, `appointments/${appointmentId}`);
+                                // await update(apptRef, data);
+                                console.log('Sincronizando UPDATE_ATTENDANCE (simulado)', payload);
+                                break;
+                            // ... outros casos
+                            default:
+                                console.warn(`Ação desconhecida na fila: ${action}`);
+                        }
+
+                        // Se teve sucesso, remove da fila
+                        await store.delete(id);
+                        console.log(`Item ${id} sincronizado e removido.`);
+                        
+                        item = await item.continue();
+
+                    } catch (error) {
+                        console.error(`Erro ao sincronizar item ${id} (${action}):`, error);
+                        // Decide o que fazer em caso de erro
+                        // Parar? Tentar de novo? Marcar como 'com erro'?
+                        // Por enquanto, paramos para evitar perda de dados
+                        updateSyncStatus('error', 'Erro ao sincronizar');
+                        return; // Para o processamento
+                    }
+                }
+                
+                await tx.done;
+                console.log("Fila de sincronização processada com sucesso.");
+                updateSyncStatus('synced', 'Sincronizado');
+
+            } catch (error) {
+                console.error("Erro grave no processamento da fila de sincronização:", error);
+                updateSyncStatus('error', 'Erro na fila');
+            }
+        }
+        
+        // --- VIRTUAL FILE: utils.js ---
+        
+        // Estado global da UI
+        let currentModal = {
+            primaryAction: null,
+            secondaryAction: null
+        };
+        let syncStatus = 'synced'; // synced, syncing, offline, error
+        
+        // Elementos da DOM (cache)
+        const $ = (selector) => document.querySelector(selector);
+        
+        const $globalLoader = $('#global-loader');
+        const $loginView = $('#login-view');
+        const $appView = $('#app-view');
+        const $loginForm = $('#login-form');
+        const $loginError = $('#login-error');
+        const $logoutButton = $('#logout-button');
+        const $mobileLogoutButton = $('#mobile-logout-button');
+        
+        const $syncStatusEl = $('#sync-status');
+        const $syncIcon = $('#sync-icon');
+        const $syncText = $('#sync-text');
+        
+        const $sidebar = $('#sidebar');
+        const $mobileMenu = $('#mobile-menu');
+        const $mobileMenuButton = $('#mobile-menu-button');
+        const $mobileMenuClose = $('#mobile-menu-close');
+        const $mobileMenuOverlay = $('#mobile-menu-overlay');
+
+        const $modalContainer = $('#modal-container');
+        const $modalTitle = $('#modal-title');
+        const $modalContent = $('#modal-content');
+        const $modalIcon = $('#modal-icon');
+        const $modalPrimaryBtn = $('#modal-primary-btn');
+        const $modalSecondaryBtn = $('#modal-secondary-btn');
+        
+        const $pageTitle = $('#page-title');
+
+        /**
+         * Exibe o overlay de carregamento global.
+         */
+        function showGlobalLoader() {
+            $globalLoader.style.display = 'flex';
+        }
+
+        /**
+         * Oculta o overlay de carregamento global.
+         */
+        function hideGlobalLoader() {
+            $globalLoader.style.display = 'none';
+        }
+
+        /**
+         * Atualiza o indicador de status da sincronização.
+         * @param {'synced'|'syncing'|'offline'|'error'} status
+         * @param {string} text
+         */
+        function updateSyncStatus(status, text) {
+            syncStatus = status;
+            $syncText.textContent = text;
+            
+            // Lista de todas as classes de status possíveis
+            const statusClasses = ['sync-synced', 'sync-syncing', 'sync-offline', 'sync-error', 'animate-spin'];
+            
+            // Remove todas as classes de status anteriores
+            $syncStatusEl.classList.remove(...statusClasses);
+            
+            let iconName = 'wifi';
+            let classesToAdd = ['sync-synced']; // Agora é um array
+
+            switch (status) {
+                case 'synced':
+                    iconName = 'check-circle';
+                    classesToAdd = ['sync-synced'];
+                    break;
+                case 'syncing':
+                    iconName = 'refresh-cw';
+                    classesToAdd = ['sync-syncing', 'animate-spin']; // Separado
+                    break;
+                case 'offline':
+                    iconName = 'wifi-off';
+                    classesToAdd = ['sync-offline'];
+                    break;
+                case 'error':
+                    iconName = 'alert-triangle';
+                    classesToAdd = ['sync-error'];
+                    break;
+            }
+            
+            $syncIcon.setAttribute('data-lucide', iconName);
+            // Adiciona as novas classes
+            $syncStatusEl.classList.add(...classesToAdd); // Usando spread
+            
+            lucide.createIcons({
+                nodes: [$syncIcon]
+            });
+        }
+        
+        /**
+         * Exibe o modal genérico.
+         * @param {object} options
+         * @param {string} options.title - Título do modal.
+         * @param {string} options.contentHtml - HTML a ser injetado no corpo.
+         * @param {string} [options.icon='info'] - Ícone (lucide).
+         * @param {string} [options.primaryText='Salvar'] - Texto do botão primário.
+         * @param {string} [options.secondaryText='Cancelar'] - Texto do botão secundário.
+         * @param {function} [options.onPrimaryClick] - Callback do botão primário.
+         * @param {function} [options.onSecondaryClick] - Callback do botão secundário.
+         */
+        function showModal({ 
+            title, 
+            contentHtml, 
+            icon = 'info', 
+            primaryText = 'Salvar', 
+            secondaryText = 'Cancelar',
+            onPrimaryClick = null,
+            onSecondaryClick = null
+        }) {
+            $modalTitle.textContent = title;
+            $modalContent.innerHTML = contentHtml;
+            $modalIcon.innerHTML = `<svg class="h-6 w-6 text-blue-600" data-lucide="${icon}"></svg>`;
+            lucide.createIcons({ nodes: [$modalIcon.firstElementChild] });
+            
+            $modalPrimaryBtn.textContent = primaryText;
+            $modalSecondaryBtn.textContent = secondaryText;
+
+            // Remove listeners antigos
+            $modalPrimaryBtn.replaceWith($modalPrimaryBtn.cloneNode(true));
+            $modalSecondaryBtn.replaceWith($modalSecondaryBtn.cloneNode(true));
+            
+            // Reatribui botões ao DOM
+            const newPrimaryBtn = $('#modal-primary-btn');
+            const newSecondaryBtn = $('#modal-secondary-btn');
+
+            if (onPrimaryClick) {
+                newPrimaryBtn.style.display = 'inline-flex';
+                newPrimaryBtn.addEventListener('click', onPrimaryClick);
+            } else {
+                newPrimaryBtn.style.display = 'none';
+            }
+            
+            if (onSecondaryClick) {
+                newSecondaryBtn.style.display = 'inline-flex';
+                newSecondaryBtn.addEventListener('click', onSecondaryClick);
+            } else {
+                // O padrão é fechar
+                newSecondaryBtn.addEventListener('click', hideModal);
+            }
+
+            $modalContainer.style.display = 'block';
+        }
+        
+        /**
+         * Oculta o modal genérico.
+         */
+        function hideModal() {
+            $modalContainer.style.display = 'none';
+            $modalTitle.textContent = '';
+            $modalContent.innerHTML = '';
+        }
+
+        /**
+         * Exibe um alerta simples usando o modal.
+         * @param {string} title
+         * @param {string} message
+         * @param {'info'|'warning'|'error'} type
+         */
+        function showAlert(title, message, type = 'info') {
+            let icon = 'info';
+            if (type === 'warning') icon = 'alert-triangle';
+            if (type === 'error') icon = 'alert-circle';
+
+            showModal({
+                title,
+                contentHtml: `<p>${message}</p>`,
+                icon,
+                primaryText: 'OK',
+                onPrimaryClick: hideModal,
+                secondaryText: 'Fechar',
+                onSecondaryClick: hideModal
+            });
+            // Esconde o botão 'Fechar' para um alerta simples
+            $('#modal-secondary-btn').style.display = 'none';
+        }
+        
+        /**
+         * Formata data (ex: 2024-10-30T10:00:00Z -> 30/10/2024)
+         * @param {string | Date} dateInput
+         * @returns {string}
+         */
+        function formatDate(dateInput) {
+            if (!dateInput) return 'N/A';
+            try {
+                const date = new Date(dateInput);
+                return date.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); // UTC para evitar off-by-one
+            } catch (e) {
+                return 'Data inválida';
+            }
+        }
+        
+        /**
+         * Formata data e hora (ex: -> 30/10/2024 10:30)
+         * @param {string | Date} dateInput
+         * @returns {string}
+         */
+        function formatDateTime(dateInput) {
+            if (!dateInput) return 'N/A';
+            try {
+                const date = new Date(dateInput);
+                return date.toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return 'Data inválida';
+            }
+        }
+
+
+        // --- VIRTUAL FILE: auth.js ---
+        
+        // Estado global de autenticação
+        let currentUser = null;
+        let currentUserProfile = null; // { uid, email, name, role, status }
+        
+        /**
+        * Lida com o submit do formulário de login.
+        */
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = $('#login-email').value;
+            const password = $('#login-password').value;
+            $loginError.textContent = '';
+            showGlobalLoader();
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                // O sucesso é tratado pelo onAuthStateChanged
+            } catch (error) {
+                console.error("Erro de login:", error.code, error.message);
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                    $loginError.textContent = 'Email ou senha inválidos.';
+                } else if (error.code === 'auth/api-key-not-valid') {
+                    $loginError.textContent = 'Erro de configuração: API Key do Firebase inválida.';
+                } else {
+                    $loginError.textContent = `Erro ao tentar fazer login. (${error.code})`;
+                }
+                hideGlobalLoader();
+            }
+        }
+        
+        /**
+        * Lida com o clique no botão de logout.
+        */
+        async function handleLogout() {
+            try {
+                // Limpa listeners de dados antes de deslogar
+                clearAllDataListeners();
+                
+                await signOut(auth);
+                // O sucesso é tratado pelo onAuthStateChanged
+            } catch (error) {
+                console.error("Erro ao fazer logout:", error);
+            }
+        }
+        
+        /**
+        * Atualiza a UI para a tela de login.
+        */
+        function showLoginView() {
+            $loginView.style.display = 'flex';
+            $appView.style.display = 'none';
+            $mobileMenu.style.display = 'none';
+            hideGlobalLoader();
+        }
+        
+        /**
+        * Atualiza a UI para a tela principal da aplicação.
+        */
+        function showAppView(userProfile) {
+            $loginView.style.display = 'none';
+            $appView.style.display = 'flex'; // 'flex' por causa do layout com sidebar
+            
+            // Preenche informações do usuário
+            const userName = userProfile.name || 'Usuário';
+            const userRole = userProfile.role || 'desconhecido';
+            
+            $('#user-name').textContent = userName;
+            $('#user-role').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            $('#mobile-user-name').textContent = userName;
+            $('#mobile-user-role').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
+            
+            // Atualiza a navegação baseada na role
+            updateNavigation(userRole);
+            hideGlobalLoader();
+        }
+        
+        /**
+        * Observador principal do estado de autenticação.
+        */
+        function initAuthListener() {
+            showGlobalLoader();
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    console.log("Usuário autenticado:", user.uid);
+                    // 1. Usuário está logado. Buscar perfil no Realtime Database.
+                    try {
+                        const userProfileRef = ref(db, `users/${user.uid}`);
+                        const snapshot = await get(userProfileRef);
+                        
+                        if (snapshot.exists()) {
+                            currentUserProfile = { uid: user.uid, ...snapshot.val() };
+                            currentUser = user;
+                            
+                            if (currentUserProfile.status === 'inactive') {
+                                console.warn("Usuário inativo. Deslogando.");
+                                showAlert('Acesso Negado', 'Sua conta está inativa. Contate o administrador.', 'error');
+                                await handleLogout();
+                                return;
+                            }
+                            
+                            // 2. Mostrar a aplicação
+                            showAppView(currentUserProfile);
+                            
+                            // 3. Iniciar listeners de dados
+                            initDataListeners(currentUserProfile.role, currentUserProfile.uid);
+
+                            // 4. Navegar para a rota correta
+                            navigateToHash();
+                            
+                        } else {
+                            // Usuário autenticado no Firebase, mas sem perfil no DB
+                            console.error("Erro crítico: Perfil de usuário não encontrado no DB.");
+                            showAlert('Erro de Perfil', 'Seu perfil de usuário não foi encontrado. Contate o suporte.', 'error');
+                            await handleLogout();
+                        }
+                    } catch (error) {
+                        console.error("Erro ao buscar perfil do usuário:", error);
+                        showAlert('Erro de Conexão', 'Não foi possível carregar seu perfil. Tente novamente.', 'error');
+                        await handleLogout();
+                    }
+                } else {
+                    // 0. Usuário está deslogado.
+                    console.log("Nenhum usuário autenticado.");
+                    currentUser = null;
+                    currentUserProfile = null;
+                    showLoginView();
+                }
+            });
+        }
+
+        // --- VIRTUAL FILE: app.js (Router & Navegação) ---
+        
+        let calendarInstance = null; // Instância do FullCalendar
+        let chartInstances = {}; // Instâncias do Chart.js
+        let dataListeners = []; // Armazena referências para 'off()' do Firebase
+
+        // Definição das rotas e permissões
+        const routes = {
+            '#/dashboard': { 
+                title: 'Dashboard', 
+                icon: 'layout-dashboard', 
+                roles: ['administrator'],
+                load: loadDashboardPage
+            },
+            '#/agenda': { 
+                title: 'Agenda', 
+                icon: 'calendar-days', 
+                roles: ['administrator', 'reception', 'therapist'],
+                load: loadAgendaPage
+            },
+            '#/pacientes': { 
+                title: 'Pacientes', 
+                icon: 'users', 
+                roles: ['administrator', 'reception', 'therapist'], // Terapeutas podem ver, mas não editar
+                load: loadPacientesPage
+            },
+            '#/pagamentos': { 
+                title: 'Financeiro', 
+                icon: 'dollar-sign', 
+                roles: ['administrator', 'reception'],
+                load: loadPagamentosPage
+            },
+            '#/relatorios': { 
+                title: 'Relatórios', 
+                icon: 'pie-chart', 
+                roles: ['administrator'],
+                load: loadRelatoriosPage
+            },
+            '#/usuarios': { 
+                title: 'Usuários', 
+                icon: 'user-cog', 
+                roles: ['administrator'],
+                load: loadUsuariosPage
+            }
+        };
+        
+        /**
+         * Atualiza os links da barra de navegação (desktop e mobile)
+         * com base na role do usuário.
+         */
+        function updateNavigation(role) {
+            const navHtml = Object.entries(routes)
+                .filter(([path, route]) => route.roles.includes(role))
+                .map(([path, route]) => `
+                    <a href="${path}" data-route="${path}"
+                       class="nav-link text-gray-600 hover:bg-gray-50 hover:text-gray-900 group flex items-center px-4 py-3 text-sm font-medium rounded-md">
+                        <svg class="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500" data-lucide="${route.icon}"></svg>
+                        ${route.title}
+                    </a>
+                `).join('');
+                
+            $('#app-nav').innerHTML = navHtml;
+            $('#mobile-app-nav').innerHTML = navHtml;
+            
+            // Adiciona ícones
+            lucide.createIcons({
+                nodes: document.querySelectorAll('#app-nav svg, #mobile-app-nav svg')
+            });
+        }
+        
+        /**
+         * O "router" principal. Lida com a mudança de hash.
+         */
+        function navigateToHash() {
+            // Se estiver no login, não faz nada
+            if (!currentUserProfile) return;
+            
+            const role = currentUserProfile.role;
+            let hash = window.location.hash;
+
+            // Se hash estiver vazio ou for inválido, redireciona para a página inicial da role
+            if (!hash || !routes[hash] || !routes[hash].roles.includes(role)) {
+                if (role === 'administrator') hash = '#/dashboard';
+                else if (role === 'reception') hash = '#/agenda';
+                else if (role === 'therapist') hash = '#/agenda';
+                
+                // Atualiza o hash sem adicionar ao histórico
+                window.history.replaceState(null, '', hash);
+            }
+            
+            // Oculta todas as páginas
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            
+            // Remove o 'active' de todos os links
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('bg-gray-100', 'text-gray-900'));
+            
+            // Carrega a página correta
+            const route = routes[hash];
+            if (route) {
+                const pageId = hash.substring(2) + '-page'; // ex: #/dashboard -> dashboard-page
+                const pageEl = $(`#${pageId}`);
+                
+                if (pageEl) {
+                    pageEl.classList.add('active');
+                    $pageTitle.textContent = route.title;
+                    
+                    // Ativa o link de navegação
+                    document.querySelectorAll(`.nav-link[data-route="${hash}"]`).forEach(link => {
+                        link.classList.add('bg-gray-100', 'text-gray-900');
+                    });
+                    
+                    // Fecha o menu mobile ao navegar
+                    if ($mobileMenu.style.display !== 'none') {
+                        toggleMobileMenu();
+                    }
+
+                    // Chama a função de load da página
+                    if (route.load) {
+                        try {
+                            route.load();
+                        } catch (error) {
+                            console.error(`Erro ao carregar a página ${hash}:`, error);
+                            showAlert('Erro na Página', `Não foi possível carregar a página ${route.title}.`, 'error');
+                        }
+                    }
+                    
+                } else {
+                    console.error(`Elemento da página #${pageId} não encontrado.`);
+                }
+            }
+        }
+        
+        /**
+         * Inicializa os listeners de dados principais (ex: agenda)
+         */
+        function initDataListeners(role, uid) {
+            // Limpa listeners antigos (ex: se o usuário trocou)
+            clearAllDataListeners();
+            
+            // Exemplo: Listener para a agenda
+            // Esta query pode precisar ser mais específica (ex: por mês)
+            let agendaQuery;
+            if (role === 'therapist') {
+                // Terapeuta só vê a própria agenda
+                agendaQuery = query(ref(db, 'appointments'), orderByChild('therapistId'), equalTo(uid));
+            } else {
+                // Admin/Recepção veem tudo (limitado por performance, idealmente filtrar por data)
+                agendaQuery = query(ref(db, 'appointments')); // Perigoso sem filtros!
+                console.warn("Query de agenda aberta. Em produção, filtre por data.");
+            }
+            
+            const agendaRef = agendaQuery;
+            const agendaListener = onValue(agendaRef, (snapshot) => {
+                const appointmentsData = snapshot.val() || {};
+                const appointmentsList = Object.keys(appointmentsData).map(key => ({
+                    id: key,
+                    ...appointmentsData[key]
+                }));
+                
+                // Atualiza o FullCalendar se ele estiver visível/instanciado
+                if (calendarInstance) {
+                    const events = appointmentsToEvents(appointmentsList);
+                    calendarInstance.removeAllEvents();
+                    calendarInstance.addEventSource(events);
+                }
+            }, (error) => {
+                console.error("Erro ao ouvir agenda:", error);
+            });
+            
+            // Salva o listener para poder removê-lo
+            dataListeners.push({ ref: agendaRef, listener: agendaListener });
+        }
+        
+        /**
+         * Remove todos os listeners do Firebase abertos.
+         */
+        function clearAllDataListeners() {
+            dataListeners.forEach(({ ref, listener }) => {
+                try {
+                    off(ref, 'value', listener);
+                } catch(e) {
+                    console.warn("Erro ao remover listener:", e);
+                }
+            });
+            dataListeners = [];
+            console.log("Listeners de dados removidos.");
+        }
+
+        /**
+         * Controla o menu mobile.
+         */
+        function toggleMobileMenu() {
+            if ($mobileMenu.style.display === 'none') {
+                $mobileMenu.style.display = 'block';
+                // Adiciona um pequeno delay para a animação de entrada (se houver CSS)
+            } else {
+                $mobileMenu.style.display = 'none';
+            }
+        }
+        
+        /**
+         * Função principal de inicialização da aplicação.
+         */
+        function initApp() {
+            // Handlers de Login/Logout
+            $loginForm.addEventListener('submit', handleLogin);
+            $logoutButton.addEventListener('click', handleLogout);
+            $mobileLogoutButton.addEventListener('click', handleLogout);
+            
+            // Handlers do Menu Mobile
+            $mobileMenuButton.addEventListener('click', toggleMobileMenu);
+            $mobileMenuClose.addEventListener('click', toggleMobileMenu);
+            $mobileMenuOverlay.addEventListener('click', toggleMobileMenu);
+
+            // Handler do Router
+            window.addEventListener('hashchange', navigateToHash);
+            
+            // Handlers de Modal
+            $modalSecondaryBtn.addEventListener('click', hideModal);
+
+            // Handlers de Sincronização
+            window.addEventListener('online', processSyncQueue);
+            window.addEventListener('offline', () => updateSyncStatus('offline', 'Offline'));
+
+            // Inicia o DB Offline
+            initOfflineDb().then(() => {
+                console.log("Banco de dados offline pronto.");
+                // Tenta sincronizar ao iniciar
+                processSyncQueue();
+            });
+
+            // Inicia o listener de autenticação (ponto de entrada)
+            initAuthListener();
+            
+            // Renderiza ícones iniciais (login)
+            lucide.createIcons();
+        }
+
+        
+        // --- VIRTUAL FILE: dashboard.js ---
+        
+        function destroyCharts() {
+            Object.values(chartInstances).forEach(chart => chart.destroy());
+            chartInstances = {};
+        }
+
+        async function loadDashboardPage() {
+            console.log("Carregando Dashboard...");
+            // Verifica permissão (redundância)
+            if (currentUserProfile.role !== 'administrator') {
+                showAlert('Acesso Negado', 'Você não tem permissão para ver o dashboard.', 'warning');
+                window.location.hash = '#/agenda'; // Redireciona
+                return;
+            }
+
+            // Limpa gráficos antigos
+            destroyCharts();
+
+            // Simulação de busca de dados
+            // Em um app real, faria queries complexas ao Firebase
+            const totalAtendimentos = [120, 150, 130, 160, 180, 175];
+            const especialidadesData = {
+                labels: ['Psicologia', 'Fonoaudiologia', 'T. Ocupacional', 'Nutrição'],
+                data: [45, 30, 25, 10]
+            };
+            const cancelamentoData = {
+                labels: ['Presença', 'Ausência', 'Cancelamento'],
+                data: [75, 10, 15]
+            };
+
+            // Renderiza Gráfico 1: Atendimentos
+            const ctx1 = $('#chart-atendimentos').getContext('2d');
+            chartInstances.chart1 = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'], // Simulado
+                    datasets: [{
+                        label: 'Nº de Atendimentos',
+                        data: totalAtendimentos,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                }
+            });
+            
+            // Renderiza Gráfico 2: Especialidades
+            const ctx2 = $('#chart-especialidades').getContext('2d');
+            chartInstances.chart2 = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: especialidadesData.labels,
+                    datasets: [{
+                        label: 'Distribuição',
+                        data: especialidadesData.data,
+                        backgroundColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(245, 158, 11)',
+                            'rgb(239, 68, 68)'
+                        ]
+                    }]
+                }
+            });
+
+            // Renderiza Gráfico 3: Cancelamentos
+            const ctx3 = $('#chart-cancelamentos').getContext('2d');
+            chartInstances.chart3 = new Chart(ctx3, {
+                type: 'pie',
+                data: {
+                    labels: cancelamentoData.labels,
+                    datasets: [{
+                        label: 'Status',
+                        data: cancelamentoData.data,
+                         backgroundColor: [
+                            'rgb(16, 185, 129)', // Presença
+                            'rgb(239, 68, 68)', // Ausência
+                            'rgb(245, 158, 11)' // Cancelamento
+                        ]
+                    }]
+                }
+            });
+        }
+
+
+        // --- VIRTUAL FILE: agenda.js ---
+
+        /**
+         * Converte appointments do Firebase para eventos do FullCalendar
+         */
+        function appointmentsToEvents(appointments) {
+            return appointments.map(appt => {
+                const start = `${appt.date}T${appt.time}`; // ex: "2024-10-30T09:00"
+                
+                // Define a cor baseada no status
+                let color = 'rgb(59, 130, 246)'; // Padrão (agendado)
+                if (appt.status === 'presence') color = 'rgb(16, 185, 129)'; // Verde
+                if (appt.status === 'absence') color = 'rgb(239, 68, 68)'; // Vermelho
+                if (appt.status === 'cancellation') color = 'rgb(245, 158, 11)'; // Laranja
+
+                return {
+                    id: appt.id,
+                    title: `Paciente ${appt.patientId.slice(0, 5)}...`, // TODO: Buscar nome real
+                    start: start,
+                    // end: // Adicionar se tiver duração
+                    backgroundColor: color,
+                    borderColor: color,
+                    extendedProps: appt // Armazena o objeto original
+                };
+            });
+        }
+
+        function loadAgendaPage() {
+            console.log("Carregando Agenda...");
+            const calendarEl = $('#calendar');
+            
+            // Destrói instância antiga se existir
+            if (calendarInstance) {
+                calendarInstance.destroy();
+            }
+
+            calendarInstance = new FullCalendar.Calendar(calendarEl, {
+                locale: 'pt-br',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                },
+                initialView: 'timeGridWeek',
+                editable: true,
+                selectable: true,
+                slotMinTime: '07:00:00',
+                slotMaxTime: '20:00:00',
+                allDaySlot: false,
+                
+                // --- Event Handlers ---
+                
+                /**
+                 * Clique em um evento existente (atendimento)
+                 */
+                eventClick: (info) => {
+                    const appt = info.event.extendedProps;
+                    console.log("Clicou no evento:", appt);
+                    showAttendanceModal(appt);
+                },
+
+                /**
+                 * Clique em um horário vago (novo atendimento)
+                 */
+                select: (info) => {
+                    console.log("Selecionou horário:", info);
+                    showAppointmentModal(null, {
+                        date: info.start.toISOString().split('T')[0],
+                        time: info.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                        therapistId: (currentUserProfile.role === 'therapist') ? currentUserProfile.uid : null
+                    });
+                    calendarInstance.unselect();
+                },
+                
+                /**
+                 * Arrastar e soltar um evento (mudar horário)
+                 */
+                eventDrop: async (info) => {
+                    const appt = info.event.extendedProps;
+                    const newDate = info.event.start.toISOString().split('T')[0];
+                    const newTime = info.event.start.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    console.log(`Movendo ${appt.id} para ${newDate} ${newTime}`);
+                    
+                    // 1. Verificar Conflito
+                    const conflict = await checkAppointmentConflict(newDate, newTime, appt.therapistId, appt.patientId, appt.id);
+                    if (conflict) {
+                        showAlert('Conflito de Horário', conflict, 'error');
+                        info.revert(); // Reverte a mudança visual
+                        return;
+                    }
+                    
+                    // 2. Salvar alteração
+                    try {
+                        const apptRef = ref(db, `appointments/${appt.id}`);
+                        await update(apptRef, {
+                            date: newDate,
+                            time: newTime,
+                            // TODO: Log de auditoria
+                        });
+                        console.log("Atendimento movido com sucesso.");
+                    } catch (error) {
+                        console.error("Erro ao mover atendimento:", error);
+                        showAlert('Erro', 'Não foi possível salvar a alteração.', 'error');
+                        info.revert();
+                    }
+                }
+            });
+            
+            // Força a renderização e o carregamento dos dados que o listener já pode ter
+            calendarInstance.render();
+            // Dispara o listener de dados novamente para carregar
+            initDataListeners(currentUserProfile.role, currentUserProfile.uid); 
+        }
+
+        /**
+         * Modal de Novo Atendimento / Edição
+         */
+        function showAppointmentModal(appointmentData = null, defaults = {}) {
+            const isEditing = !!appointmentData;
+            const data = isEditing ? appointmentData : defaults;
+            
+            const title = isEditing ? 'Editar Atendimento' : 'Novo Atendimento';
+            
+            const contentHtml = `
+                <form id="appointment-form" class="space-y-4">
+                    <input type="hidden" id="appt-id" value="${data.id || ''}">
+                    <div>
+                        <label for="appt-patient" class="block text-sm font-medium text-gray-700">Paciente</label>
+                        <select id="appt-patient" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">Selecione...</option>
+                            <!-- TODO: Popular dinamicamente -->
+                        </select>
+                    </div>
+                    <div>
+                        <label for="appt-therapist" class="block text-sm font-medium text-gray-700">Profissional</label>
+                        <select id="appt-therapist" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">Selecione...</option>
+                            <!-- TODO: Popular dinamicamente -->
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="appt-date" class="block text-sm font-medium text-gray-700">Data</label>
+                            <input type="date" id="appt-date" value="${data.date || ''}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="appt-time" class="block text-sm font-medium text-gray-700">Hora</label>
+                            <input type="time" id="appt-time" value="${data.time || ''}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                    </div>
+                     <div>
+                        <label for="appt-specialty" class="block text-sm font-medium text-gray-700">Especialidade</label>
+                        <select id="appt-specialty" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            <option value="">Selecione...</option>
+                            <!-- TODO: Popular dinamicamente -->
+                        </select>
+                    </div>
+                </form>
+            `;
+            
+            showModal({
+                title,
+                contentHtml,
+                icon: 'calendar-plus',
+                primaryText: isEditing ? 'Atualizar' : 'Salvar',
+                onPrimaryClick: handleSaveAppointment,
+                onSecondaryClick: hideModal
+            });
+            
+            // TODO: Popular os <select> de pacientes e terapeutas
+        }
+
+        /**
+         * Modal de Registro de Presença
+         */
+        function showAttendanceModal(appointmentData) {
+            const title = `Registrar Atendimento`;
+            const contentHtml = `
+                <form id="attendance-form" class="space-y-4">
+                    <input type="hidden" id="attendance-appt-id" value="${appointmentData.id}">
+                    <p><strong>Paciente:</strong> ${appointmentData.patientId}</p> <!-- TODO: Nome real -->
+                    <p><strong>Profissional:</strong> ${appointmentData.therapistId}</p> <!-- TODO: Nome real -->
+                    <p><strong>Data/Hora:</strong> ${formatDate(appointmentData.date)} às ${appointmentData.time}</p>
+                    
+                    <fieldset class="mt-4">
+                        <legend class="text-base font-medium text-gray-900">Status do Atendimento</legend>
+                        <div class="mt-2 space-y-2">
+                            <div class="flex items-center">
+                                <input id="status-presence" name="status" type="radio" value="presence" ${appointmentData.status === 'presence' ? 'checked' : ''} class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <label for="status-presence" class="ml-3 block text-sm font-medium text-gray-700">Presença</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="status-absence" name="status" type="radio" value="absence" ${appointmentData.status === 'absence' ? 'checked' : ''} class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <label for="status-absence" class="ml-3 block text-sm font-medium text-gray-700">Ausência (Gera cobrança)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="status-cancellation" name="status" type="radio" value="cancellation" ${appointmentData.status === 'cancellation' ? 'checked' : ''} class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <label for="status-cancellation" class="ml-3 block text-sm font-medium text-gray-700">Cancelamento (Não gera cobrança)</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <div>
+                        <label for="appt-observation" class="block text-sm font-medium text-gray-700">Observação</label>
+                        <textarea id="appt-observation" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">${appointmentData.observation || ''}</textarea>
+                        <p id="observation-warning" class="text-xs text-red-600 mt-1" style="display: none;">Observação é obrigatória para cancelamento.</p>
+                    </div>
+                </form>
+            `;
+            
+            showModal({
+                title,
+                contentHtml,
+                icon: 'check-square',
+                primaryText: 'Registrar',
+                onPrimaryClick: handleMarkAttendance,
+                onSecondaryClick: hideModal
+            });
+            
+            // Adiciona listener para o campo 'Cancelamento'
+            const radioCancel = $('#status-cancellation');
+            const obsWarning = $('#observation-warning');
+            radioCancel.addEventListener('change', () => {
+                if (radioCancel.checked) {
+                    obsWarning.style.display = 'block';
+                }
+            });
+            $('#status-presence').addEventListener('change', () => obsWarning.style.display = 'none');
+            $('#status-absence').addEventListener('change', () => obsWarning.style.display = 'none');
+        }
+
+        /**
+         * Salva o registro de presença (Presença/Ausência/Cancelamento)
+         */
+        async function handleMarkAttendance() {
+            const appointmentId = $('#attendance-appt-id').value;
+            const newStatus = $(`input[name="status"]:checked`).value;
+            const observation = $('#appt-observation').value;
+
+            // Validação de Cancelamento
+            if (newStatus === 'cancellation' && !observation.trim()) {
+                $('#observation-warning').style.display = 'block';
+                showAlert('Campo Obrigatório', 'A observação é obrigatória ao marcar um cancelamento.', 'warning');
+                return;
+            }
+
+            const dataToUpdate = {
+                status: newStatus,
+                observation: observation,
+                recordedBy: currentUserProfile.uid,
+                recordedAt: serverTimestamp()
+            };
+            
+            console.log("Atualizando atendimento:", appointmentId, dataToUpdate);
+
+            try {
+                const apptRef = ref(db, `appointments/${appointmentId}`);
+                await update(apptRef, dataToUpdate);
+                console.log("Status de atendimento atualizado com sucesso.");
+                hideModal();
+                // O FullCalendar será atualizado pelo listener (onValue)
+            } catch (error) {
+                console.error("Erro ao registrar presença:", error);
+                showAlert('Erro', 'Não foi possível salvar o registro.', 'error');
+                // TODO: Adicionar à fila offline
+                // addToSyncQueue('UPDATE_ATTENDANCE', { appointmentId, data: dataToUpdate });
+            }
+        }
+        
+        /**
+         * Salva um novo atendimento ou edição.
+         */
+        async function handleSaveAppointment() {
+            // Coleta dados do form
+            const appointmentId = $('#appt-id').value;
+            const patientId = $('#appt-patient').value;
+            const therapistId = $('#appt-therapist').value;
+            const date = $('#appt-date').value;
+            const time = $('#appt-time').value;
+            const specialtyId = $('#appt-specialty').value;
+            
+            // Validação simples
+            if (!patientId || !therapistId || !date || !time || !specialtyId) {
+                showAlert('Campos Vazios', 'Por favor, preencha todos os campos.', 'warning');
+                return;
+            }
+
+            const isEditing = !!appointmentId;
+            
+            // 1. Verificar Conflito
+            const conflict = await checkAppointmentConflict(date, time, therapistId, patientId, appointmentId);
+            if (conflict) {
+                showAlert('Conflito de Horário', conflict, 'error');
+                return;
+            }
+            
+            // 2. Montar objeto
+            const appointmentData = {
+                patientId,
+                therapistId,
+                date,
+                time,
+                specialtyId,
+                status: 'scheduled', // Padrão
+                recordedBy: currentUserProfile.uid,
+                recordedAt: serverTimestamp()
+            };
+
+            // 3. Salvar no Firebase
+            try {
+                let apptRef;
+                if (isEditing) {
+                    // Atualiza
+                    apptRef = ref(db, `appointments/${appointmentId}`);
+                    await update(apptRef, appointmentData);
+                    console.log("Atendimento atualizado com sucesso.");
+                } else {
+                    // Cria novo
+                    apptRef = push(ref(db, 'appointments'));
+                    await set(apptRef, appointmentData);
+                    console.log("Atendimento criado com sucesso.");
+                }
+                hideModal();
+                // O FullCalendar será atualizado pelo listener
+            } catch (error) {
+                console.error("Erro ao salvar atendimento:", error);
+                showAlert('Erro', 'Não foi possível salvar o atendimento.', 'error');
+                // TODO: Adicionar à fila offline
+            }
+        }
+        
+        /**
+         * Verifica se há conflitos de horário para um novo atendimento.
+         * @returns {string|null} Mensagem de conflito, ou null se não houver.
+         */
+        async function checkAppointmentConflict(date, time, therapistId, patientId, excludingId = null) {
+            try {
+                // 1. Verifica se o terapeuta está ocupado
+                const therapistQuery = query(
+                    ref(db, 'appointments'), 
+                    orderByChild('therapistId'), 
+                    equalTo(therapistId)
+                );
+                const therapistSnapshot = await get(therapistQuery);
+                if (therapistSnapshot.exists()) {
+                    for (const [key, appt] of Object.entries(therapistSnapshot.val())) {
+                        if (key !== excludingId && appt.date === date && appt.time === time) {
+                            return `Conflito: O terapeuta já tem um atendimento neste horário.`;
+                        }
+                    }
+                }
+                
+                // 2. Verifica se o paciente está ocupado
+                const patientQuery = query(
+                    ref(db, 'appointments'),
+                    orderByChild('patientId'),
+                    equalTo(patientId)
+                );
+                const patientSnapshot = await get(patientQuery);
+                 if (patientSnapshot.exists()) {
+                    for (const [key, appt] of Object.entries(patientSnapshot.val())) {
+                        if (key !== excludingId && appt.date === date && appt.time === time) {
+                            return `Conflito: O paciente já tem um atendimento neste horário.`;
+                        }
+                    }
+                }
+                
+                return null; // Sem conflitos
+            } catch (error) {
+                console.error("Erro ao checar conflito:", error);
+                return "Erro ao verificar a agenda. Tente novamente.";
+            }
+        }
+
+        // --- VIRTUAL FILE: pacientes.js ---
+        
+        // Cache local de pacientes para busca
+        let localPatientsCache = [];
+
+        async function loadPacientesPage() {
+            console.log("Carregando Pacientes...");
+            // Limpa a tabela
+            const tableBody = $('#pacientes-table-body');
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Carregando...</td></tr>`;
+
+            try {
+                const patientsRef = ref(db, 'patients');
+                const snapshot = await get(patientsRef);
+                
+                if (!snapshot.exists()) {
+                    tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Nenhum paciente encontrado.</td></tr>`;
+                    localPatientsCache = [];
+                    return;
+                }
+                
+                const patientsData = snapshot.val();
+                localPatientsCache = Object.keys(patientsData).map(key => ({
+                    id: key,
+                    ...patientsData[key]
+                }));
+                
+                renderPacientesTable(localPatientsCache);
+
+            } catch (error) {
+                console.error("Erro ao buscar pacientes:", error);
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-red-500">Erro ao carregar pacientes.</td></tr>`;
+            }
+        }
+        
+        /**
+         * Renderiza a tabela de pacientes
+         */
+        function renderPacientesTable(patients) {
+            const tableBody = $('#pacientes-table-body');
+            if (patients.length === 0) {
+                 tableBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500">Nenhum paciente encontrado.</td></tr>`;
+                 return;
+            }
+            
+            tableBody.innerHTML = patients.map(patient => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${patient.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.responsible.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${patient.responsible.phone}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${patient.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${patient.status === 'active' ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button data-id="${patient.id}" class="edit-patient-btn text-blue-600 hover:text-blue-900">
+                            <svg class="h-5 w-5" data-lucide="edit"></svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            lucide.createIcons({ nodes: tableBody.querySelectorAll('svg') });
+            
+            // Adiciona listeners aos botões de editar
+            tableBody.querySelectorAll('.edit-patient-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const patient = localPatientsCache.find(p => p.id === id);
+                    showPatientModal(patient);
+                });
+            });
+        }
+        
+        /**
+         * Modal de Novo Paciente / Edição
+         */
+        function showPatientModal(patientData = null) {
+            const isEditing = !!patientData;
+            const data = patientData || { 
+                responsible: {},
+                status: 'active'
+            };
+
+            const title = isEditing ? 'Editar Paciente' : 'Novo Paciente';
+            
+            const contentHtml = `
+                <form id="patient-form" class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                    <input type="hidden" id="patient-id" value="${data.id || ''}">
+                    
+                    <h4 class="text-md font-medium text-gray-800 border-b pb-1">Dados do Paciente</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="patient-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                            <input type="text" id="patient-name" value="${data.name || ''}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="patient-birthdate" class="block text-sm font-medium text-gray-700">Data de Nascimento</label>
+                            <input type="date" id="patient-birthdate" value="${data.birthDate || ''}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                    </div>
+                    
+                    <h4 class="text-md font-medium text-gray-800 border-b pb-1 pt-4">Dados do Responsável</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                            <label for="resp-name" class="block text-sm font-medium text-gray-700">Nome do Responsável</label>
+                            <input type="text" id="resp-name" value="${data.responsible.name || ''}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="resp-phone" class="block text-sm font-medium text-gray-700">Telefone (WhatsApp)</label>
+                            <input type="tel" id="resp-phone" value="${data.responsible.phone || ''}" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                        <div>
+                            <label for="resp-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="resp-email" value="${data.responsible.email || ''}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        </div>
+                    </div>
+
+                    <h4 class="text-md font-medium text-gray-800 border-b pb-1 pt-4">Configuração</h4>
+                     <div>
+                        <label for="patient-status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select id="patient-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="active" ${data.status === 'active' ? 'selected' : ''}>Ativo</option>
+                            <option value="inactive" ${data.status === 'inactive' ? 'selected' : ''}>Inativo</option>
+                        </select>
+                    </div>
+                    
+                    <!-- TODO: Adicionar campos de especialidades, pacotes, etc. -->
+                    
+                </form>
+            `;
+            
+            showModal({
+                title,
+                contentHtml,
+                icon: 'user-plus',
+                primaryText: isEditing ? 'Atualizar' : 'Salvar',
+                onPrimaryClick: handleSavePatient,
+                onSecondaryClick: hideModal
+            });
+        }
+        
+        /**
+         * Salva um novo paciente ou edição.
+         */
+        async function handleSavePatient() {
+            // Coleta dados do form
+            const patientId = $('#patient-id').value;
+            const isEditing = !!patientId;
+
+            // Validação
+            const name = $('#patient-name').value.trim();
+            const birthDate = $('#patient-birthdate').value;
+            const respName = $('#resp-name').value.trim();
+            const respPhone = $('#resp-phone').value.trim();
+            
+            if (!name || !birthDate || !respName || !respPhone) {
+                showAlert('Campos Vazios', 'Nome, Data de Nasc., Nome do Responsável e Telefone são obrigatórios.', 'warning');
+                return;
+            }
+            
+            const patientData = {
+                name: name,
+                birthDate: birthDate,
+                status: $('#patient-status').value,
+                responsible: {
+                    name: respName,
+                    phone: respPhone,
+                    email: $('#resp-email').value.trim()
+                },
+                // TODO: Adicionar specialties, packages, notes...
+            };
+            
+            console.log("Salvando paciente:", patientData);
+
+            try {
+                if (isEditing) {
+                    // Atualiza
+                    const patientRef = ref(db, `patients/${patientId}`);
+                    await update(patientRef, patientData);
+                    console.log("Paciente atualizado com sucesso.");
+                } else {
+                    // Cria novo
+                    const patientRef = push(ref(db, 'patients'));
+                    await set(patientRef, patientData);
+                    console.log("Paciente criado com sucesso.");
+                }
+                hideModal();
+                loadPacientesPage(); // Recarrega a lista
+            } catch (error) {
+                console.error("Erro ao salvar paciente:", error);
+                showAlert('Erro', 'Não foi possível salvar o paciente.', 'error');
+                // TODO: Adicionar à fila offline
+                // if (!isEditing) {
+                //    addToSyncQueue('CREATE_PATIENT', patientData);
+                // }
+            }
+        }
+        
+
+        // --- VIRTUAL FILE: pagamentos.js ---
+        function loadPagamentosPage() {
+            console.log("Carregando Pagamentos...");
+            $('#pagamentos-page').innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Gestão Financeira</h2>
+                <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="construction"></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Página em Construção</h3>
+                    <p class="mt-1 text-sm text-gray-500">O módulo financeiro será implementado aqui.</p>
+                </div>
+            `;
+            lucide.createIcons({ nodes: $('#pagamentos-page svg')});
+        }
+        
+        // --- VIRTUAL FILE: relatorios.js ---
+        function loadRelatoriosPage() {
+            console.log("Carregando Relatórios...");
+             $('#relatorios-page').innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Relatórios</h2>
+                <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="construction"></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Página em Construção</h3>
+                    <p class="mt-1 text-sm text-gray-500">Os relatórios em PDF (jsPDF) serão gerados aqui.</p>
+                </div>
+            `;
+            lucide.createIcons({ nodes: $('#relatorios-page svg')});
+        }
+        
+        // --- VIRTUAL FILE: usuarios.js ---
+        function loadUsuariosPage() {
+            console.log("Carregando Usuários...");
+            $('#usuarios-page').innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Gestão de Usuários</h2>
+                <div class="bg-white p-6 rounded-lg shadow text-center text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" data-lucide="construction"></svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Página em Construção</h3>
+                    <p class="mt-1 text-sm text-gray-500">O CRUD de usuários (Admin) será implementado aqui.</p>
+                </div>
+            `;
+            lucide.createIcons({ nodes: $('#usuarios-page svg')});
+        }
+
+
+        // --- PONTO DE ENTRADA DA APLICAÇÃO ---
+        // Garante que o DOM esteja pronto antes de rodar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+    </script>
+</body>
+</html>
