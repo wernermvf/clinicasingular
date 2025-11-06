@@ -59,7 +59,7 @@ Todas as páginas foram criadas com:
 - ✅ Cards e grids modernos
 - ✅ Design consistente com Tailwind CSS
 
-### 5. **Funções JavaScript Implementadas** ✅
+### 8. **Funções JavaScript Implementadas** ✅
 Criadas funções de carregamento para todas as páginas:
 - ✅ `loadProfissionaisPage()` - Lista profissionais do Firebase
 - ✅ `loadEspecialidadesPage()` - Lista especialidades
@@ -70,38 +70,76 @@ Criadas funções de carregamento para todas as páginas:
 - ✅ `loadAuditoriaPage()` - Histórico de auditoria
 - ✅ `loadConfiguracoesPage()` - Configurações do sistema
 
-### 6. **Lógica de Negócio Definida** ✅
+### 9. **Lógica de Negócio Definida** ✅
 - ✅ Status de atendimento: scheduled, present, absent, cancelled
 - ✅ Regra: Present/Absent = gera valores | Cancelled = não gera valores
 - ✅ Cálculo automático: valor paciente + repasse profissional
 - ✅ Suporte a valores customizados, pacotes e descontos
 - ✅ Validação de conflitos em agendas
 
+### 10. **Modais CRUD Implementados** ✅ ⭐ *NOVO*
+- ✅ Modal de Especialidades (criar/editar)
+- ✅ Modal de Profissionais (criar/editar com múltiplas especialidades)
+- ✅ Modal de Status de Atendimento (com preview financeiro)
+- ✅ Formulários completos com validação
+- ✅ Integração com Firebase (save/update)
+- ✅ Registro de auditoria automático
+
+### 11. **Funções de Edição e Atualização** ✅ ⭐ *NOVO*
+- ✅ `editEspecialidade(id)` - Busca dados e abre modal
+- ✅ `editProfessional(id)` - Busca dados e abre modal
+- ✅ `updateStatus(appointmentId, newStatus)` - Atualiza status com cálculo
+- ✅ `viewProfessionalSchedule(id)` - Visualiza horários fixos
+- ✅ `setupPageEventListeners()` - Conecta botões automaticamente
+
+### 12. **Sistema de Cálculo Financeiro** ✅ ⭐ *NOVO*
+Implementada função completa `calculateAppointmentValues()`:
+```javascript
+// Calcula valor do paciente
+// 1. Busca valor padrão da especialidade
+// 2. Verifica valor customizado do paciente
+// 3. Aplica pacote ativo (se houver)
+// 4. Aplica desconto global
+// 
+// Calcula repasse ao profissional
+// 1. Verifica configuração (fixo ou %)
+// 2. Calcula baseado no valor do paciente
+```
+
+### 13. **Sistema de Auditoria** ✅ ⭐ *NOVO*
+- ✅ Função `logAudit()` implementada
+- ✅ Registra: timestamp, user, role, action, changes
+- ✅ Integrado em todas as operações CRUD
+- ✅ Armazena em `/auditLog` no Firebase
+
+---
+
+## 📊 PROGRESSO GERAL
+
+**Concluído: 85%**
+- ✅ Estrutura de dados: 100%
+- ✅ Sistema de permissões: 100%
+- ✅ Rotas e páginas HTML: 100%
+- ✅ Funções de carregamento: 100%
+- ✅ Modais CRUD: 100% ⭐
+- ✅ Cálculos financeiros: 100% ⭐
+- ✅ Sistema de auditoria: 100% ⭐
+- 🔄 Offline sync: 60%
+- ⏳ Geração de agendas: 0%
+- ⏳ Relatórios PDF: 0%
+- ⏳ Dashboard gráficos: 20%
+
 ---
 
 ## ⏳ O QUE FALTA IMPLEMENTAR
 
-### 1. **Modais de Cadastro/Edição** 🔄
-Precisam ser criados modais para:
-- [ ] Adicionar/Editar Profissional
-- [ ] Adicionar/Editar Especialidade
+### 1. **Modais Pendentes** 🔄
+### 1. **Modais Pendentes** 🔄
 - [ ] Adicionar/Editar Agenda Fixa
-- [ ] Adicionar/Editar Paciente (aprimorado)
-- [ ] Alterar Status de Atendimento
+- [ ] Adicionar/Editar Paciente (versão aprimorada com pacotes/descontos)
+- [ ] Adicionar Novo Agendamento
 
-### 2. **Função de Cálculo Automático** 🔄
-```javascript
-async function calculateAppointmentValues(appointmentId, status) {
-    // 1. Buscar dados do atendimento
-    // 2. Buscar valor customizado do paciente ou valor padrão
-    // 3. Aplicar desconto/pacote se houver
-    // 4. Calcular repasse ao profissional (% ou fixo)
-    // 5. Salvar em appointment.financial
-    // 6. Registrar em auditLog
-}
-```
-
-### 3. **Sistema de Geração de Agendas Fixas** 🔄
+### 2. **Sistema de Geração de Agendas Fixas** ⏳
 ```javascript
 async function generateAppointmentsFromFixedSchedule(fixedScheduleId) {
     // 1. Buscar agenda fixa
@@ -112,26 +150,25 @@ async function generateAppointmentsFromFixedSchedule(fixedScheduleId) {
 }
 ```
 
-### 4. **Geração de Relatórios PDF** 🔄
+### 3. **Geração de Relatórios PDF** ⏳
 Usar jsPDF para:
 - [ ] Relatório mensal por paciente (atendimentos + total a pagar)
 - [ ] Relatório mensal por profissional (presença/ausência/cancelamento + repasse)
 - [ ] Exportação com logo da clínica e dados
 
-### 5. **Dashboard com Gráficos** 🔄
+### 4. **Dashboard com Gráficos** ⏳
 Atualizar Dashboard para mostrar:
 - [ ] Faturamento mensal (linha)
 - [ ] Distribuição por especialidade (pizza)
 - [ ] Taxa de absenteísmo (barra)
 - [ ] Comparativo mês a mês
 
-### 6. **Sistema de Auditoria Automático** 🔄
-Criar função helper que registra todas as alterações:
-```javascript
-async function logAudit(action, entityType, entityId, changes) {
-    // Salvar em auditLog/ com timestamp, usuário, alterações
-}
-```
+### 5. **Sincronização Offline Completa** ⏳
+Aprimorar sistema offline:
+- [ ] Processar todos os tipos de operações na fila
+- [ ] Detectar e resolver conflitos
+- [ ] Notificar usuário sobre falhas
+- [ ] Retry automático com exponential backoff
 
 ### 7. **Validações e Regras de Negócio** 🔄
 - [ ] Validar conflito de horários ao agendar
